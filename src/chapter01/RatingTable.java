@@ -4,8 +4,8 @@ package chapter01;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class RatingTable extends Table<Integer> {
 
@@ -95,6 +95,13 @@ public class RatingTable extends Table<Integer> {
      */
     public int getMaxMoiveID() {
         return Collections.max(getMovieIdSet());
+    }
+
+    /*
+        MoiveIDの最大値を取得
+     */
+    public int getMaxUserID() {
+        return Collections.max(getUserIdSet());
     }
 
 
@@ -198,9 +205,11 @@ public class RatingTable extends Table<Integer> {
         Tableを配列に変換
      */
     public int[][] toArray() {
-        int[][] array = new int[getUserNum() + 1][getMaxMoiveID() + 1];
+        int[][] array = new int[getMaxUserID() + 1][getMaxMoiveID() + 1];
+
         for (int userId : getUserIdSet()) {
             for (int movieId : getWatchedMoviesSet(userId)) {
+
                 array[userId][movieId] = getTable().get(userId).get(movieId);
             }
         }

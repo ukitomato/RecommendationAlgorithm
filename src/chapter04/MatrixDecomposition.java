@@ -5,10 +5,7 @@ package chapter04;
 import chapter01.RatingTable;
 import chapter01.Table;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Random;
 
 public class MatrixDecomposition extends RatingTable {
@@ -65,7 +62,7 @@ public class MatrixDecomposition extends RatingTable {
         N, M, U, Vの初期化
      */
     public void initNMUV() {
-        N = getUserNum() + 1;
+        N = getMaxUserID() + 1;
         M = getMaxMoiveID() + 1;
 
         U = new double[K][N];
@@ -237,7 +234,6 @@ public class MatrixDecomposition extends RatingTable {
         while (true) {
             updaterMSE(eta, lamda);
             double updateMse = rMSE2(lamda);
-            System.out.println("K=" + K + " λ=" + lamda + "η=" + eta + " : " + (mse - updateMse));
             if (mse - updateMse > 0.0000001) mse = updateMse;
             else {
                 count++;
@@ -280,5 +276,21 @@ public class MatrixDecomposition extends RatingTable {
         return testTable.get(userId, movieId);
     }
 
+    public void resultToCSV(String fileName) throws IOException {
+        FileWriter fw = new FileWriter(new File(fileName));
+        PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
+
+        pw.println("UserID, MovieID, Rating");
+        for (int i = 1; i <= getMaxUserID(); i++) {
+            for (int j = 1; j <= getMaxMoiveID(); j++) {
+                if (i == 29 || i == 32) {
+                    pw.println(i + "," + j + "," + 0);
+                } else {
+                    pw.println(i + "," + j + "," + predictS(i, j));
+                }
+            }
+        }
+        pw.close();
+    }
 }
 

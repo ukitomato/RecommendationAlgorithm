@@ -1,15 +1,12 @@
 package chapter02;
 
 import chapter01.RatingDualTable;
-import chapter01.RatingTable;
 import chapter01.Table;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 public class GroupLens extends RatingDualTable {
@@ -79,12 +76,33 @@ public class GroupLens extends RatingDualTable {
         return this.getMovieNum();
     }
 
-    public Set<Integer> I(int i) {
-        return getWatchedMoviesSet(i);
+    public static void exportShowingArray(double[][] array, String fileName) throws IOException {
+        FileWriter fw = new FileWriter(new File(fileName));
+        PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
+
+        System.out.print("    ");
+        pw.print("    ");
+        for (int i = 1; i < array.length; i++) {
+            System.out.print(String.format("%6d", i) + " ");
+            pw.print(String.format("%6d", i) + " ");
+        }
+        System.out.println();
+        pw.println();
+        for (int i = 1; i < array.length; i++) {
+            System.out.print(String.format("%4d", i) + " ");
+            pw.print(String.format("%4d", i) + " ");
+            for (int j = 1; j < array[i].length; j++) {
+                System.out.print(String.format("%6s", String.format("%2.3f", array[i][j])) + " ");
+                pw.print(String.format("%6s", String.format("%2.3f", array[i][j])) + " ");
+            }
+            System.out.println();
+            pw.println();
+        }
+        pw.close();
     }
 
-    public Set<Integer> U(int k) {
-        return getWatchersSet(k);
+    public Set<Integer> I(int i) {
+        return new HashSet<>(getWatchedMoviesSet(i));
     }
 
     public double r(int i, int j) {
@@ -98,17 +116,8 @@ public class GroupLens extends RatingDualTable {
         return r;
     }
 
-    /*
-        rを配列で返す
-     */
-    public double[][] rArray() {
-        double[][] array = new double[getUserNum() + 1][getUserNum() + 1];
-        for (int i = 1; i <= getUserNum(); i++) {
-            for (int j = 1; j <= getUserNum(); j++) {
-                array[i][j] = r(i, j);
-            }
-        }
-        return array;
+    public Set<Integer> U(int k) {
+        return new HashSet<>(getWatchersSet(k));
     }
 
     /*
@@ -120,9 +129,7 @@ public class GroupLens extends RatingDualTable {
 
         Set<Integer> U = U(k);
         U.remove(i);
-
         if (U.size() == 0) return avg_s(i);
-
         for (int j : U) {
             numerator += r(i, j) * (s(j, k) - avg_s(j));
             denominator += Math.abs(r(i, j));
@@ -154,6 +161,7 @@ public class GroupLens extends RatingDualTable {
         br.close();
     }
 
+
     /*
         評価値平均の計算
      */
@@ -168,38 +176,16 @@ public class GroupLens extends RatingDualTable {
     }
 
     /*
-        ユーザー間類似度の計算
+        rを配列で返す
      */
-    public void calcR() {
+    public double[][] rArray() {
+        double[][] array = new double[getMaxUserID() + 1][getMaxUserID() + 1];
         for (int i : getUserIdSet()) {
             for (int j : getUserIdSet()) {
-
-                Set<Integer> Iij = I(i);
-                Iij.retainAll(I(j));
-                if (Iij.size() <= 1) {
-                    r.put(i, j, 0.0);
-                    continue;
-                }
-
-                double denominator_sik = 0.0;
-                double denominator_sjk = 0.0;
-                double numerator = 0.0;
-
-
-                for (int k : Iij) {
-                    numerator += (s(i, k) - avg_s(i)) * (s(j, k) - avg_s(j));
-                    denominator_sik += (s(i, k) - avg_s(i)) * (s(i, k) - avg_s(i));
-                    denominator_sjk += (s(j, k) - avg_s(j)) * (s(j, k) - avg_s(j));
-                }
-
-                if (denominator_sik == 0 || denominator_sjk == 0) {
-                    r.put(i, j, 0.0);
-                    continue;
-                }
-                r.put(i, j, numerator / (Math.sqrt(denominator_sik) * Math.sqrt(denominator_sjk)));
+                array[i][j] = r(i, j);
             }
         }
-
+        return array;
     }
 
     /*
@@ -247,28 +233,56 @@ public class GroupLens extends RatingDualTable {
         calcR();
     }
 
-    public static void exportShowingArray(double[][] array,String fileName) throws IOException {
+    /*
+        ユーザー間類似度の計算
+     */
+    public void calcR() {
+        for (int i : getUserIdSet()) {
+            for (int j : getUserIdSet()) {
+                Set<Integer> Iij = I(i);
+                Iij.retainAll(I(j));
+                if (Iij.size() <= 1) {
+                    r.put(i, j, 0.0);
+                    continue;
+                }
+
+                double denominator_sik = 0.0;
+                double denominator_sjk = 0.0;
+                double numerator = 0.0;
+
+
+                for (int k : Iij) {
+                    numerator += (s(i, k) - avg_s(i)) * (s(j, k) - avg_s(j));
+                    denominator_sik += (s(i, k) - avg_s(i)) * (s(i, k) - avg_s(i));
+                    denominator_sjk += (s(j, k) - avg_s(j)) * (s(j, k) - avg_s(j));
+                }
+
+                if (denominator_sik == 0 || denominator_sjk == 0) {
+                    r.put(i, j, 0.0);
+                    continue;
+                }
+
+                r.put(i, j, numerator / (Math.sqrt(denominator_sik) * Math.sqrt(denominator_sjk)));
+            }
+        }
+
+    }
+
+    public void resultToCSV(String fileName) throws IOException {
         FileWriter fw = new FileWriter(new File(fileName));
         PrintWriter pw = new PrintWriter(new BufferedWriter(fw));
 
-        System.out.print("    ");
-        pw.print("    ");
-        for(int i = 1; i < array.length; i++){
-            System.out.print(String.format("%6d", i)+" ");
-            pw.print(String.format("%6d", i) + " ");
-        }
-        System.out.println();
-        pw.println();
-        for (int i = 1; i < array.length; i++) {
-            System.out.print( String.format("%4d", i) + " ");
-            pw.print(String.format("%4d", i) + " ");
-            for (int j = 1; j < array[i].length; j++) {
-                System.out.print(String.format("%6s",String.format("%2.3f", array[i][j])) + " ");
-                pw.print(String.format("%6s",String.format("%2.3f", array[i][j])) + " ");
+        pw.println("UserID, MovieID, Rating");
+        for (int i = 1; i <= getMaxUserID(); i++) {
+            for (int j = 1; j <= getMaxMoiveID(); j++) {
+                if (i == 29 || i == 32) {
+                    pw.println(i + "," + j + "," + 0);
+                } else {
+                    pw.println(i + "," + j + "," + predictS(i, j));
+                }
             }
-            System.out.println();
-            pw.println();
         }
         pw.close();
     }
+
 }

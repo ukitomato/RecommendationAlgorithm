@@ -18,10 +18,10 @@ public class HandleDataTest3 {
             // nを格納
             int[] ns = {100, 200, 400, 800, 1600};
             // nの種類分ratingTableを作成
-            RatingTable[] ratingTables = new RatingTable[ns.length];
+            RatingDualTable[] ratingTables = new RatingDualTable[ns.length];
 
             for (int i = 0; i < ns.length; i++) {
-                ratingTables[i] = new RatingTable();
+                ratingTables[i] = new RatingDualTable();
                 ratingTables[i].importTrainData("exp_data/" + ns[i] + "User_train_Ratings.dat");
             }
 
@@ -50,7 +50,7 @@ public class HandleDataTest3 {
 
             //平均時間計測
             int N = 100;// 繰り返し回数
-            int R = 100;//反復回数
+            int R = 1000;// 反復回数
             long time = 0;
             long start;
 
@@ -73,10 +73,11 @@ public class HandleDataTest3 {
                     for (int j = 0; j < R; j++) {
                         //入力の変化
                         int movieId = (int) movieIdArray[random.nextInt(movieIdArray.length)];
-
+                        TreeSet<Integer> set = new TreeSet<>(ratingTables[ni].getWatchersSet(movieId));
                         start = System.currentTimeMillis();
+
                         // 処理
-                        for (int userId : new TreeSet<>(ratingTables[ni].getWatchersSet(movieId))) {
+                        for (int userId : set) {
                             ratingTables[ni].get(userId, movieId);
                         }
                         time += System.currentTimeMillis() - start;
@@ -84,7 +85,7 @@ public class HandleDataTest3 {
                     }
                 }
                 itemNum[ni] = itemNum[ni] / N;
-                times[ni] = ((double) time / (double) N);
+                times[ni] = ((double) time / (double) N) / itemNum[ni];
             }
             //計測時間結果表示
             System.out.println("----------Result----------");
@@ -98,7 +99,7 @@ public class HandleDataTest3 {
             //計測時間結果書き出し
             pw.println("N,time");
             for (int ni = 0; ni < ns.length; ni++) {
-                pw.println( ns[ni] + "," + times[ni]);
+                pw.println(ns[ni] + "," + times[ni]);
             }
             /*
                 1-3-4-2
@@ -112,9 +113,11 @@ public class HandleDataTest3 {
                         //入力の変化
                         int userId = (int) userIdArray[random.nextInt(userIdArray.length)];
 
+
+                        TreeSet<Integer> set = new TreeSet<>(ratingTables[ni].getWatchedMoviesSet(userId));
                         start = System.currentTimeMillis();
                         // 処理
-                        for (int movieId : new TreeSet<>(ratingTables[ni].getWatchedMoviesSet(userId))) {
+                        for (int movieId : set) {
                             ratingTables[ni].get(userId, movieId);
                         }
                         time += System.currentTimeMillis() - start;
@@ -122,7 +125,7 @@ public class HandleDataTest3 {
                     }
                 }
                 itemNum[ni] = itemNum[ni] / N;
-                times[ni] = ((double) time / (double) N);
+                times[ni] = ((double) time / (double) N) / itemNum[ni];
             }
             //計測時間結果表示
             System.out.println("----------Result----------");
@@ -135,7 +138,7 @@ public class HandleDataTest3 {
 //計測時間結果書き出し
             pw.println("N,time");
             for (int ni = 0; ni < ns.length; ni++) {
-                pw.println( ns[ni] + "," + times[ni]);
+                pw.println(ns[ni] + "," + times[ni]);
             }
            /*
                 1-3-4-3
@@ -150,9 +153,11 @@ public class HandleDataTest3 {
                         int userId1 = (int) userIdArray[random.nextInt(userIdArray.length)];
                         int userId2 = (int) userIdArray[random.nextInt(userIdArray.length)];
 
+
+                        TreeSet<Integer> set = new TreeSet<>(ratingTables[ni].getCommonWatchedMoviesSet(userId1, userId2));
                         start = System.currentTimeMillis();
                         // 処理
-                        for (int movieId : new TreeSet<>(ratingTables[ni].getCommonWatchedMoviesSet(userId1, userId2))) {
+                        for (int movieId : set) {
                             ratingTables[ni].get(userId1, movieId);
                             ratingTables[ni].get(userId2, movieId);
                         }
@@ -161,7 +166,7 @@ public class HandleDataTest3 {
                     }
                 }
                 itemNum[ni] = itemNum[ni] / N;
-                times[ni] = ((double) time / (double) N);
+                times[ni] = ((double) time / (double) N) / itemNum[ni];
             }
             //計測時間結果表示
             System.out.println("----------Result----------");
@@ -174,7 +179,7 @@ public class HandleDataTest3 {
 //計測時間結果書き出し
             pw.println("N,time");
             for (int ni = 0; ni < ns.length; ni++) {
-                pw.println( ns[ni] + "," + times[ni]);
+                pw.println(ns[ni] + "," + times[ni]);
             }
                        /*
                 1-3-4-4
@@ -187,10 +192,10 @@ public class HandleDataTest3 {
                         //入力の変化
                         int movieId1 = (int) movieIdArray[random.nextInt(movieIdArray.length)];
                         int movieId2 = (int) movieIdArray[random.nextInt(movieIdArray.length)];
-
+                        TreeSet<Integer> set = new TreeSet<>(ratingTables[ni].getCommonWatchersSet(movieId1, movieId2));
                         start = System.currentTimeMillis();
                         // 処理
-                        for (int userId : new TreeSet<>(ratingTables[ni].getCommonWatchersSet(movieId1, movieId2))) {
+                        for (int userId : set) {
                             ratingTables[ni].get(userId, movieId1);
                             ratingTables[ni].get(userId, movieId2);
                         }
@@ -199,7 +204,7 @@ public class HandleDataTest3 {
                     }
                 }
                 itemNum[ni] = itemNum[ni] / N;
-                times[ni] = ((double) time / (double) N);
+                times[ni] = ((double) time / (double) N) / itemNum[ni];
             }
             //計測時間結果表示
             System.out.println("----------Result----------");
@@ -213,7 +218,7 @@ public class HandleDataTest3 {
             //計測時間結果書き出し
             pw.println("N,time");
             for (int ni = 0; ni < ns.length; ni++) {
-                pw.println( ns[ni] + "," + times[ni]);
+                pw.println(ns[ni] + "," + times[ni]);
             }
             // ファイル出力
             pw.close();
